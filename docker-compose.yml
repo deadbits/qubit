@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    env_file: docker/.env
+    environment:
+      POSTGRES_DB: qubit
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4.1-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - redis_logs:/var/log/redis
+      - ./data/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      sh -c "mkdir -p /var/log/redis &&
+             chown redis:redis /var/log/redis &&
+             redis-server /usr/local/etc/redis/redis.conf"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: docker/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/qubit
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
+      REDIS_URL: redis://redis:6379/0
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ./data/config.yaml:/app/data/config.yaml:ro
+      - ./docker/entrypoint.sh:/app/entrypoint.sh:ro
+    command: ["bash", "/app/entrypoint.sh"]
+
+volumes:
+  postgres_data:
+  redis_data:
+  redis_logs: 

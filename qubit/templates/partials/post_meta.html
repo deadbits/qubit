@@ -1,0 +1,19 @@
+{% macro post_meta(post, show_time=true, author_name=none) %}
+<div class="flex gap-4 text-sm text-warm-gray-700">
+    {% if show_time %}
+    <time datetime="{{ post.published_at }}">
+        {{ post.published_at.strftime('%B %d, %Y') if post.published_at else post.created_at.strftime('%B %d, %Y') }}
+    </time>
+    {% endif %}
+    {% if author_name %}
+    <div>{{ author_name }}</div>
+    {% endif %}
+    {% if post.tags %}
+    <div class="flex gap-2">
+        {% for tag in post.tags %}
+        <span>#{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %} 

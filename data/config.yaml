@@ -1,0 +1,20 @@
+database:
+  host: db
+  port: 5432
+  name: qubit
+  user: postgres
+
+auth:
+  algorithm: "HS256"
+  access_token_expire_minutes: 90
+
+embeddings:
+  openai_embedding_model: "text-embedding-3-large"
+
+author:
+  name: Adam Swanda
+  short_name: adam
+  bio: >
+    Security researcher and developer focused on AI/ML security, threat intelligence, and building tools that help people research and create.
+  github: deadbits
+  website: https://www.deadbits.org

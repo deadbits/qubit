@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}About - Qubit{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-2xl mx-auto" x-data="{ activeTab: 'author' }">
+    <div>
+        <h1 class="text-lg text-warm-gray-800">ABOUT</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-warm-gray-100">
+        <div class="flex space-x-8">
+            <button 
+                @click="activeTab = 'author'"
+                :class="{ 'border-b-2 border-warm-gray-800': activeTab === 'author' }"
+                class="pb-2 text-sm text-warm-gray-800 hover:text-warm-gray-700">
+                AUTHOR
+            </button>
+            <button 
+                @click="activeTab = 'qubit'"
+                :class="{ 'border-b-2 border-warm-gray-800': activeTab === 'qubit' }"
+                class="pb-2 text-sm text-warm-gray-800 hover:text-warm-gray-700">
+                QUBIT
+            </button>
+        </div>
+    </div>
+
+    <div x-show="activeTab === 'author'" class="prose font-mono">
+        <h2 class="text-base text-warm-gray-800">{{ author.name }}</h2>
+        <p class="text-warm-gray-700">{{ author.bio }}</p>
+        
+        <div class="mt-8 flex space-x-4">
+            <ul class="list-disc">
+                {% if author.website %}
+                    <li><a href="{{ author.website }}" class="text-warm-gray-800 hover:text-warm-gray-700 no-underline">Website</a></li>
+                {% endif %}
+                {% if author.github %}
+                    <li><a href="{{ author.github }}" class="text-warm-gray-800 hover:text-warm-gray-700 no-underline">Github</a></li>
+                {% endif %}
+                {% if author.linkedin %}
+                    <li><a href="{{ author.linkedin }}" class="text-warm-gray-800 hover:text-warm-gray-700 no-underline">LinkedIn</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div x-show="activeTab === 'qubit'" class="prose font-mono">
+        <p class="text-warm-gray-700">
+            <span class="text-warm-gray-700">A qubit (/ˈkjuːbɪt/) or quantum bit is a basic unit of quantum information.</span>
+        </p>
+
+        <h2 class="text-base text-warm-gray-800 mt-8">WHY</h2>
+        <p class="text-warm-gray-700">
+            Modern social platforms shape how we write and share. But sometimes you just want a quiet corner of the internet to document your thoughts and learnings.
+        </p>
+
+        <p class="text-warm-gray-700 mt-4">
+            Inspired by the simplicity of "Today I Learned" blogs and the clean aesthetics of platforms like <a href="https://writefreely.org/" class="text-link hover:text-link-hover no-underline">WriteFreely</a> and <a href="https://article.app/" class="text-link hover:text-link-hover no-underline">Article.app</a>, Qubit is built for developers and tinkerers who want to focus on writing without the pressure of metrics, algorithms, or engagement statistics.
+        </p>
+
+        <p class="text-warm-gray-700 mt-4">
+            Write short notes about what you're building. Share useful resources you've discovered. Document your learning journey.
+        </p>
+        <p class="text-warm-gray-700 mt-4">
+            No follower counts, no likes, no retweets — just thoughts and code in clean, monospaced type.
+        </p>
+
+        <div class="mt-12 pt-8 border-t border-warm-gray-100">
+            <p class="text-warm-gray-700 text-sm">
+                Built by <a href="https://github.com/deadbits" class="text-warm-gray-800 hover:text-warm-gray-700 no-underline">@deadbits</a> - <a href="https://github.com/deadbits/qubit" class="text-warm-gray-800 hover:text-warm-gray-700 no-underline">Github repo</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

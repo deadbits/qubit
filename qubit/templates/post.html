@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/post_meta.html" import post_meta %}
+
+{% block title %}{{ post.title }} - Qubit{% endblock %}
+
+{% block content %}
+<article class="max-w-2xl mx-auto">
+    <header class="mb-12">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-semibold text-warm-gray-800 font-mono">{{ post.title }}</h1>
+            {% if user.is_admin %}
+            <a href="/admin/hub/edit/{{ post.id }}"
+                class="text-sm text-warm-gray-700 hover:text-warm-gray-800 font-mono">
+                EDIT →
+            </a>
+            {% endif %}
+        </div>
+        <div class="mt-6 flex items-baseline gap-4">
+            <div class="text-sm font-mono font-medium text-warm-gray-700">{{ config.author.short_name }}</div>
+            {{ post_meta(post) }}
+        </div>
+    </header>
+
+    <div class="prose prose-lg prose-code:text-warm-gray-800 prose-pre:bg-warm-gray-100 prose-pre:text-warm-gray-800">
+        {{ post.content_html | safe }}
+    </div>
+</article>
+{% endblock %}

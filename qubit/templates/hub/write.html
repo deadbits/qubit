@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title if post else "New Post" }} - Qubit{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+
+<div id="editor-data" 
+    data-content="{{ post.content if post else '' }}"
+    data-title="{{ post.title if post else '' }}"
+    data-tags="{{ ','.join(post.tags) if post and post.tags else '' }}"
+    data-post-id="{{ post.id|string if post else '' }}"
+></div>
+
+<script>
+    const editorData = document.getElementById('editor-data');
+    window.postData = {
+        content: editorData.dataset.content || '',
+        title: editorData.dataset.title || '',
+        tags: editorData.dataset.tags || '',
+        postId: editorData.dataset.postId || ''
+    };
+</script>
+
+<div x-data="{ 
+    content: window.postData.content,
+    title: window.postData.title,
+    tags: window.postData.tags,
+    editor: null,
+    init() {
+        if (!window.EasyMDE) {
+            console.error('EasyMDE not loaded');
+            return;
+        }
+
+        this.editor = new EasyMDE({
+            element: this.$refs.editor,
+            spellChecker: false,
+            status: ['lines', 'words', 'cursor'],
+            toolbar: false,
+            placeholder: 'Start writing...',
+            initialValue: this.content,
+            autofocus: true,
+            minHeight: '400px',
+            shortcuts: {
+                toggleBold: 'Cmd-B',
+                toggleItalic: 'Cmd-I',
+                toggleStrikethrough: 'Cmd-S',
+                toggleCodeBlock: 'Cmd-Alt-C',
+                toggleBlockquote: 'Cmd-\'',
+                toggleHeading1: 'Cmd-1',
+                toggleHeading2: 'Cmd-2',
+                toggleUnorderedList: 'Cmd-L',
+                toggleOrderedList: 'Cmd-Alt-L'
+            }
+        });
+
+        // Update content and character count on change
+        this.editor.codemirror.on('change', () => {
+            this.content = this.editor.value();
+        });
+
+        // Apply custom styling
+        const editorElement = this.editor.codemirror.getWrapperElement();
+        editorElement.classList.add('font-mono');
+    },
+    async submit(e, isDraft = false) {
+        e.preventDefault();
+        try {
+            const isNew = !window.postData.postId;
+            const method = isNew ? 'POST' : 'PUT';
+            const endpoint = isNew ? '/api/admin/posts' : `/api/admin/posts/${window.postData.postId}`;
+            
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: this.title || 'Untitled',
+                    content: this.content,
+                    tags: this.tags.split(',').map(t => t.trim()).filter(t => t),
+                    slug: (this.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    published: !isDraft
+                })
+            });
+
+            if (response.ok) {
+                window.dispatchEvent(new CustomEvent('post-success', { 
+                    detail: isDraft ? 'Draft saved!' : 'Post published!'
+                }));
+                setTimeout(() => {
+                    window.location.href = '/admin/hub';
+                }, 1000);
+            } else {
+                const error = await response.text();
+                console.error('Error submitting post:', error);
+                alert('Error ' + (isDraft ? 'saving draft' : 'publishing post') + ': ' + error);
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            alert('Error ' + (isDraft ? 'saving draft' : 'publishing post') + ': ' + err.message);
+        }
+    }
+}">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-lg text-warm-gray-800">NEW POST</h1>
+        <a href="/admin/hub" onclick="return handleAdminClick(event)" class="text-sm text-link hover:text-link-hover">
+            ← BACK TO HUB
+        </a>
+    </div>
+
+    <form class="space-y-6" @submit.prevent>
+        <div>
+            <input type="text" 
+                name="title" 
+                id="title" 
+                x-model="title"
+                placeholder="Title"
+                required
+                class="w-full bg-transparent border-b border-warm-gray-100 py-2 text-warm-gray-800 placeholder-warm-gray-700 focus:border-warm-gray-700 focus:ring-0 text-3xl font-bold">
+        </div>
+
+        <div class="min-h-[500px]">
+            <textarea x-ref="editor"></textarea>
+        </div>
+
+        <div class="border border-[#d1d1d1] p-2">
+            <input type="text" 
+                name="tags" 
+                id="tags"
+                x-model="tags"
+                placeholder="Tags (comma separated)"
+                class="w-full bg-transparent text-warm-gray-800 placeholder-warm-gray-700 focus:outline-none">
+        </div>
+
+        <div class="flex justify-end space-x-4">
+            <button type="button"
+                @click="submit($event, true)"
+                class="text-sm text-warm-gray-700 hover:text-warm-gray-800">
+                SAVE DRAFT
+            </button>
+            <button type="button"
+                @click="submit($event, false)"
+                class="text-sm text-warm-gray-800 hover:text-warm-gray-700">
+                PUBLISH →
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<style>
+    /* EasyMDE customization to match Qubit's minimal theme */
+    .EasyMDEContainer {
+        background: transparent;
+    }
+
+    .editor-toolbar {
+        display: none;
+    }
+
+    .CodeMirror {
+        border: none;
+        background: transparent;
+        font-family: 'IBM Plex Mono', monospace;
+        color: #292524;
+        line-height: 1.75;
+        height: 400px !important;
+    }
+
+    .CodeMirror-cursor {
+        border-left: 1px solid #44403c;
+    }
+
+    .CodeMirror-selected {
+        background: #f5f5f4 !important;
+    }
+
+    .CodeMirror-focused {
+        box-shadow: none;
+    }
+
+    .editor-preview {
+        background: #fafaf9;
+        border-left: 1px solid #f5f5f4;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .editor-preview pre {
+        background: #f5f5f4;
+        border: none;
+        border-radius: 0.25rem;
+    }
+
+    .editor-preview code {
+        font-family: 'IBM Plex Mono', monospace;
+        background: #f5f5f4;
+        border-radius: 0.25rem;
+        padding: 0.2em 0.4em;
+    }
+
+    .editor-statusbar {
+        padding: 8px 12px;
+        color: #78716c;
+        font-size: 12px;
+    }
+</style>
+
+<div 
+    x-data="{ show: false, message: '' }"
+    @post-success.window="
+        show = true; 
+        message = $event.detail;
+        setTimeout(() => show = false, 3000)
+    "
+    class="fixed top-4 right-4 z-50"
+>
+    <div 
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform translate-y-2"
+        class="bg-warm-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm"
+    >
+        <span x-text="message"></span>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% from "partials/post_meta.html" import post_meta %}
+
+{% block title %}Posts - Qubit{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <h1 class="text-lg text-warm-gray-800">INDEX</h1>
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="search"
+                    placeholder="Search..."
+                    class="text-sm font-mono bg-transparent border-b border-warm-gray-200 focus:border-warm-gray-400 focus:outline-none text-warm-gray-800 placeholder:text-warm-gray-500 px-2 py-1"
+                >
+                <div id="search-loading" class="hidden absolute right-2 top-2">
+                    <div class="animate-spin h-4 w-4 border-2 border-warm-gray-400 border-t-transparent rounded-full"></div>
+                </div>
+            </div>
+        </div>
+        {% if user and user.is_admin %}
+        <a href="/admin/hub/write" class="text-sm text-warm-gray-700 hover:text-warm-gray-800">
+            + NEW POST
+        </a>
+        {% endif %}
+    </div>
+
+    <div id="posts-container">
+        {% for year in years|sort(reverse=true) %}
+        <div class="space-y-4">
+            <h2 class="text-base font-semibold text-warm-gray-700">{{ year }}</h2>
+            <div class="divide-y divide-warm-gray-100">
+                {% for post in years[year] %}
+                <article class="py-4">
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="text-sm">
+                            <a href="/posts/{{ post.id }}" class="text-warm-gray-800 hover:text-warm-gray-700">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        <time class="text-sm text-warm-gray-700 ml-4">
+                            {{ post.created_at }}
+                        </time>
+                    </div>
+                    <div class="mt-2">
+                        {{ post_meta(post, show_time=false) }}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not posts %}
+        <div class="text-center py-12 text-warm-gray-700">
+            No posts yet.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('search');
+const searchLoading = document.getElementById('search-loading');
+const postsContainer = document.getElementById('posts-container');
+let searchTimeout;
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    if (!query) {
+        window.location.href = '/';
+        return;
+    }
+
+    searchLoading.classList.remove('hidden');
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/posts/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            let html = '';
+            for (const year in data.years) {
+                html += `
+                    <div class="space-y-4">
+                        <h2 class="text-base font-semibold text-warm-gray-700">${year}</h2>
+                        <div class="divide-y divide-warm-gray-100">
+                `;
+                
+                for (const post of data.years[year]) {
+                    html += `
+                        <article class="py-4">
+                            <div class="flex items-baseline justify-between">
+                                <h3 class="text-sm">
+                                    <a href="/posts/${post.id}" class="text-warm-gray-800 hover:text-warm-gray-700">
+                                        ${post.title}
+                                    </a>
+                                </h3>
+                                <time class="text-sm text-warm-gray-700 ml-4">
+                                    ${post.created_at}
+                                </time>
+                            </div>
+                            <div class="mt-2">
+                                <div class="flex gap-4 text-sm text-warm-gray-700">
+                                    ${post.tags.map(tag => `<span>#${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (Object.keys(data.years).length === 0) {
+                html = '<div class="text-center py-12 text-warm-gray-700">No posts found.</div>';
+            }
+
+            postsContainer.innerHTML = html;
+        } catch (error) {
+            console.error('Error searching posts:', error);
+        } finally {
+            searchLoading.classList.add('hidden');
+        }
+    }, 300);
+});
+</script>
+{% endblock %}

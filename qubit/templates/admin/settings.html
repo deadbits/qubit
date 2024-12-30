@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Qubit{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh]">
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl text-warm-gray-800 font-mono">Settings</h1>
+            <a href="/admin/hub" class="text-sm text-link hover:text-link-hover font-mono">← Back to Hub</a>
+        </div>
+    </div>
+
+    <div x-data="{ activeTab: 'database' }" class="bg-white border border-warm-gray-100">
+        <div class="flex border-b border-warm-gray-100">
+            <button @click="activeTab = 'database'" :class="{ 'border-b-2 border-link': activeTab === 'database' }"
+                class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
+                Configuration
+            </button>
+            <button @click="activeTab = 'auth'" :class="{ 'border-b-2 border-link': activeTab === 'auth' }"
+                class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
+                Auth
+            </button>
+            <button @click="activeTab = 'embeddings'" :class="{ 'border-b-2 border-link': activeTab === 'embeddings' }"
+                class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
+                Embeddings
+            </button>
+            <button @click="activeTab = 'author'" :class="{ 'border-b-2 border-link': activeTab === 'author' }"
+                class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
+                Author
+            </button>
+        </div>
+
+        <div class="p-4">
+            <div x-show="activeTab === 'database'" class="space-y-4">
+                <table class="w-full font-mono">
+                    <tbody>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">host</td>
+                            <td class="py-2 text-sm">{{ config.database.host }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">port</td>
+                            <td class="py-2 text-sm">{{ config.database.port }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">name</td>
+                            <td class="py-2 text-sm">{{ config.database.name }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">user</td>
+                            <td class="py-2 text-sm">{{ config.database.user }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div x-show="activeTab === 'auth'" class="space-y-4">
+                <table class="w-full font-mono">
+                    <tbody>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">secret_key</td>
+                            <td class="py-2 text-sm">[hidden]</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">algorithm</td>
+                            <td class="py-2 text-sm">{{ config.auth.algorithm }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">access_token_expire_minutes</td>
+                            <td class="py-2 text-sm">{{ config.auth.access_token_expire_minutes }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div x-show="activeTab === 'embeddings'" class="space-y-4">
+                <table class="w-full font-mono">
+                    <tbody>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">openai_api_key</td>
+                            <td class="py-2 text-sm">[hidden]</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">openai_embedding_model</td>
+                            <td class="py-2 text-sm">{{ config.embeddings.openai_embedding_model }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div x-show="activeTab === 'author'" class="space-y-4">
+                <table class="w-full font-mono">
+                    <tbody>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">name</td>
+                            <td class="py-2 text-sm">{{ config.author.name }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">short_name</td>
+                            <td class="py-2 text-sm">{{ config.author.short_name }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">bio</td>
+                            <td class="py-2 text-sm">{{ config.author.bio }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">github</td>
+                            <td class="py-2 text-sm">{{ config.author.github }}</td>
+                        </tr>
+                        <tr class="border-b border-warm-gray-50">
+                            <td class="py-2 text-sm text-warm-gray-700">website</td>
+                            <td class="py-2 text-sm">{{ config.author.website }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

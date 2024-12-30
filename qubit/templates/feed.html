@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Feed - Qubit{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    posts: [], 
+    newPost: '', 
+    loading: true,
+    showDeleteModal: false,
+    postToDelete: null,
+    async loadPosts() {
+        try {
+            const response = await fetch('/api/feed');
+            const result = await response.json();
+            this.posts = Array.isArray(result.data) ? result.data : [];
+        } catch (error) {
+            console.error('Error loading posts:', error);
+            this.posts = [];
+        }
+        this.loading = false;
+    },
+    async createPost() {
+        if (!this.newPost.trim()) return;
+        try {
+            const response = await fetch('/api/admin/feed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: this.newPost })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to create post');
+            }
+            const result = await response.json();
+            const post = result.data;
+            if (post) {
+                this.posts = [post, ...(Array.isArray(this.posts) ? this.posts : [])];
+                this.newPost = '';
+            }
+        } catch (error) {
+            console.error('Error creating post:', error);
+        }
+    },
+    confirmDelete(postId) {
+        this.postToDelete = postId;
+        this.showDeleteModal = true;
+    },
+    async deletePost() {
+        if (!this.postToDelete) return;
+        try {
+            const response = await fetch(`/api/admin/feed/${this.postToDelete}`, { 
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete post');
+            }
+            this.posts = this.posts.filter(p => p.id !== this.postToDelete);
+            this.showDeleteModal = false;
+            this.postToDelete = null;
+        } catch (error) {
+            console.error('Error deleting post:', error);
+        }
+    },
+    cancelDelete() {
+        this.showDeleteModal = false;
+        this.postToDelete = null;
+    },
+    formatDate(dateStr) {
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) {
+                return 'Invalid Date';
+            }
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid Date';
+        }
+    }
+}" x-init="loadPosts" class="max-w-xl mx-auto">
+
+    {% if user and user.is_admin %}
+    <div class="mb-4">
+        <div class="rounded border border-warm-gray-200 bg-warm-gray-50">
+            <form @submit.prevent="createPost">
+                <div>
+                    <label for="post-content" class="sr-only">New post</label>
+                    <textarea
+                        id="post-content"
+                        x-model="newPost"
+                        rows="2"
+                        class="block w-full border-0 bg-transparent px-3 py-2 text-sm font-mono text-warm-gray-800 placeholder:text-warm-gray-500 focus:ring-0"
+                        placeholder="What's on your mind?"
+                    ></textarea>
+                </div>
+                <div class="flex items-center justify-end border-t border-warm-gray-200 px-3 py-1">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-btn hover:bg-btn-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-btn"
+                    >
+                        Post
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="flow-root">
+        <template x-if="loading">
+            <div class="text-center py-4 text-warm-gray-700">Loading...</div>
+        </template>
+        
+        <div class="space-y-2">
+            <template x-for="(post, index) in posts" :key="post.id">
+                <div class="rounded border border-warm-gray-200 bg-warm-gray-50 px-3 py-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="text-xs font-mono font-semibold text-warm-gray-800" x-text="post.author_name"></div>
+                        <div class="text-xs font-mono font-light text-warm-gray-600" x-text="formatDate(post.created_at)"></div>
+                    </div>
+                    <div class="text-sm font-mono font-normal text-warm-gray-800" x-text="post.content"></div>
+                    {% if user and user.is_admin %}
+                    <div class="mt-1 flex justify-end">
+                        <button 
+                            @click="confirmDelete(post.id)"
+                            class="text-xs font-mono font-light text-warm-gray-600 hover:text-warm-gray-800"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal" 
+         class="relative z-10" 
+         aria-labelledby="modal-title" 
+         role="dialog" 
+         aria-modal="true"
+         x-cloak>
+        <div x-show="showDeleteModal"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-warm-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="showDeleteModal"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                            <h3 class="text-base font-semibold leading-6 text-warm-gray-900" id="modal-title">Confirm Delete</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-warm-gray-600">Are you sure you want to delete this post? This action cannot be undone.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-2">
+                        <button type="button" 
+                                @click="deletePost()"
+                                class="inline-flex w-full justify-center rounded px-3 py-2 text-sm font-semibold text-white shadow-sm bg-red-600 hover:bg-red-500 sm:w-auto">
+                            Delete
+                        </button>
+                        <button type="button" 
+                                @click="cancelDelete()"
+                                class="mt-3 inline-flex w-full justify-center rounded px-3 py-2 text-sm font-semibold text-warm-gray-900 shadow-sm ring-1 ring-inset ring-warm-gray-300 hover:bg-warm-gray-50 sm:mt-0 sm:w-auto">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

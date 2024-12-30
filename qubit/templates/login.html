@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Qubit{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <h1 class="text-lg text-warm-gray-800 mb-8">LOGIN</h1>
+    
+    {% if error %}
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <p class="text-sm text-red-600">{{ error }}</p>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="/api/login" class="space-y-6">
+        <div>
+            <label for="username" class="block text-sm text-warm-gray-700">USERNAME</label>
+            <input type="text" 
+                name="username" 
+                id="username" 
+                required
+                class="mt-1 block w-full bg-transparent border-b border-warm-gray-100 py-2 text-warm-gray-800 placeholder-warm-gray-500 focus:border-warm-gray-700 focus:ring-0">
+        </div>
+
+        <div>
+            <label for="password" class="block text-sm text-warm-gray-700">PASSWORD</label>
+            <input type="password" 
+                name="password" 
+                id="password" 
+                required
+                class="mt-1 block w-full bg-transparent border-b border-warm-gray-100 py-2 text-warm-gray-800 placeholder-warm-gray-500 focus:border-warm-gray-700 focus:ring-0">
+        </div>
+
+        <button type="submit" class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-btn hover:bg-btn-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-btn">
+            LOGIN
+        </button>
+    </form>
+</div>
+{% endblock %}
