@@ -1,5 +1,7 @@
 # qubit
 
+* **[Documentation](https://qubit.deadbits.org)**
+
 Modern social platforms shape how we write and share. But sometimes you just want a quiet corner of the internet to document your thoughts and learnings.
 
 Inspired by the simplicity of "Today I Learned" blogs and the clean aesthetics of platforms like [WriteFreely](https://writefreely.org/) and [Article.app](https://article.app/), Qubit is built for developers and tinkerers who want to focus on writing without the pressure of metrics, algorithms, or engagement statistics.
