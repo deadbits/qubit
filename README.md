@@ -1,5 +1,11 @@
 # qubit
 
+* **[Quick Start](https://qubit.deadbits.ai/getting-started/quickstart)**
+* **[Manual Install](https://qubit.deadbits.ai/getting-started/manual-install)**
+* **[Screenshots](https://qubit.deadbits.ai/getting-started/screenshots)**
+
+Qubit is a minimalist blogging and micro-blogging platform that can be easily self-hosted.
+
 Modern social platforms shape how we write and share. But sometimes you just want a quiet corner of the internet to document your thoughts and learnings.
 
 Inspired by the simplicity of "Today I Learned" blogs and the clean aesthetics of platforms like [WriteFreely](https://writefreely.org/) and [Article.app](https://article.app/), Qubit is built for developers and tinkerers who want to focus on writing without the pressure of metrics, algorithms, or engagement statistics.
@@ -9,6 +15,9 @@ Write short notes about what you're building. Share useful resources you've disc
 No follower counts, no likes, no retweets — just thoughts and code in clean, monospaced type.
 
 ![Demo screenshots](data/assets/combined.png)
+
+> [!NOTE]
+> This project was built in two days over the holiday break. Although I built it deployment in mind, _you_ probably shouldn't deploy it publicly. There may be bugs or security issues.
 
 ## ✨ Features
 
