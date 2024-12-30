@@ -1,5 +1,7 @@
 # qubit
 
+> A qubit (/ˈkjuːbɪt/) or quantum bit is a basic unit of quantum information.
+
 * **[Quick Start](https://qubit.deadbits.ai/getting-started/quickstart)**
 * **[Manual Install](https://qubit.deadbits.ai/getting-started/manual-install)**
 * **[Screenshots](https://qubit.deadbits.ai/getting-started/screenshots)**
@@ -38,7 +40,7 @@ git clone https://github.com/deadbits/qubit
 cd qubit
 ```
 
-2. Create a `.env` file in the `docker` directory
+2. Create a `.env` file in project root directory
 
 ```bash
 # docker/.env
