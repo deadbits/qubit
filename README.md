@@ -1,6 +1,10 @@
 # qubit
 
-* **[Documentation](https://qubit.deadbits.org)**
+* **[Quick Start](https://qubit.deadbits.ai/getting-started/quickstart)**
+* **[Manual Install](https://qubit.deadbits.ai/getting-started/manual-install)**
+* **[Screenshots](https://qubit.deadbits.ai/getting-started/screenshots)**
+
+Qubit is a minimalist blogging and micro-blogging platform that can be easily self-hosted.
 
 Modern social platforms shape how we write and share. But sometimes you just want a quiet corner of the internet to document your thoughts and learnings.
 
