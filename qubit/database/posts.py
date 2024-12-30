@@ -244,6 +244,10 @@ class PostsDB(Database):
                 embedding = self.embeddings.generate_embeddings(
                     [f"{post.title}\n{post.content}"]
                 )[0]
+                
+                # Convert embedding to list if it's numpy array
+                if hasattr(embedding, 'tolist'):
+                    embedding = embedding.tolist()
 
                 async with conn.transaction():
                     now = datetime.utcnow()
