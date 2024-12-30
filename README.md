@@ -16,6 +16,9 @@ No follower counts, no likes, no retweets — just thoughts and code in clean, m
 
 ![Demo screenshots](data/assets/combined.png)
 
+> [!NOTE]
+> This project was built in two days over the holiday break. Although I built it deployment in mind, _you_ probably shouldn't deploy it publicly. There may be bugs or security issues.
+
 ## ✨ Features
 
 - Clean, distraction-free writing experience
