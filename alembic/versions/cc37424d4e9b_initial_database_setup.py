@@ -33,7 +33,6 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     # Create extensions if they don't exist
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
 
     # Create users table if it doesn't exist
@@ -87,7 +86,7 @@ def upgrade() -> None:
             sa.Column("published", sa.Boolean(), nullable=True),
             sa.Column("published_at", sa.DateTime(), nullable=True),
             sa.Column("author_id", sa.Integer(), nullable=False),
-            sa.Column("content_embedding", Vector(3072), nullable=True),
+            sa.Column("search_vector", postgresql.TSVECTOR(), sa.Computed("to_tsvector('english', title || ' ' || content)", persisted=True)),
             sa.Column("created_at", sa.DateTime(), nullable=True),
             sa.Column("updated_at", sa.DateTime(), nullable=True),
             sa.ForeignKeyConstraint(
@@ -97,6 +96,7 @@ def upgrade() -> None:
             sa.PrimaryKeyConstraint("id"),
         )
         op.create_index("idx_posts_slug", "posts", ["slug"], unique=False)
+        op.create_index("idx_posts_fts", "posts", ["search_vector"], postgresql_using='gin')
 
     # Create feed_posts table if it doesn't exist
     if not table_exists("feed_posts"):
@@ -146,6 +146,7 @@ def downgrade() -> None:
         op.drop_index("idx_feed_posts_created_at", table_name="feed_posts")
         op.drop_table("feed_posts")
     if table_exists("posts"):
+        op.drop_index("idx_posts_fts", table_name="posts")
         op.drop_index("idx_posts_slug", table_name="posts")
         op.drop_table("posts")
     if table_exists("tags"):
@@ -154,6 +155,5 @@ def downgrade() -> None:
     if table_exists("users"):
         op.drop_index("idx_users_username", table_name="users")
         op.drop_table("users")
-    op.execute("DROP EXTENSION IF EXISTS vector")
     op.execute('DROP EXTENSION IF EXISTS "uuid-ossp"')
     # ### end Alembic commands ###

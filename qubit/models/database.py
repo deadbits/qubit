@@ -14,7 +14,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import UUID
-from pgvector.sqlalchemy import Vector
 
 
 Base = declarative_base()
@@ -58,7 +57,6 @@ class Post(Base):
     published = Column(Boolean, default=False)
     published_at = Column(DateTime)
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content_embedding = Column(Vector(3072))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

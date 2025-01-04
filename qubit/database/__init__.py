@@ -3,7 +3,6 @@
 from typing import Optional, AsyncGenerator
 import asyncpg
 from loguru import logger
-from pgvector.asyncpg import register_vector
 
 from qubit.models.config import Config
 
@@ -36,9 +35,6 @@ class Database:
                     min_size=5,
                     max_size=20,
                 )
-
-                async with cls._pool.acquire() as conn:
-                    await register_vector(conn)
 
                 logger.info("Database connection pool created successfully")
 
@@ -78,7 +74,6 @@ class Database:
             try:
                 await conn.execute(
                     """
-                    CREATE EXTENSION IF NOT EXISTS vector;
                     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
                 """
                 )
@@ -111,7 +106,6 @@ class Database:
                         published BOOLEAN DEFAULT false,
                         published_at TIMESTAMP,
                         author_id INTEGER REFERENCES users(id) NOT NULL,
-                        content_embedding vector(3072),
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )

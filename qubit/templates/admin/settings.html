@@ -21,10 +21,6 @@
                 class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
                 Auth
             </button>
-            <button @click="activeTab = 'embeddings'" :class="{ 'border-b-2 border-link': activeTab === 'embeddings' }"
-                class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
-                Embeddings
-            </button>
             <button @click="activeTab = 'author'" :class="{ 'border-b-2 border-link': activeTab === 'author' }"
                 class="px-4 py-2 text-sm font-mono hover:text-link focus:outline-none">
                 Author
@@ -69,21 +65,6 @@
                         <tr class="border-b border-warm-gray-50">
                             <td class="py-2 text-sm text-warm-gray-700">access_token_expire_minutes</td>
                             <td class="py-2 text-sm">{{ config.auth.access_token_expire_minutes }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div x-show="activeTab === 'embeddings'" class="space-y-4">
-                <table class="w-full font-mono">
-                    <tbody>
-                        <tr class="border-b border-warm-gray-50">
-                            <td class="py-2 text-sm text-warm-gray-700">openai_api_key</td>
-                            <td class="py-2 text-sm">[hidden]</td>
-                        </tr>
-                        <tr class="border-b border-warm-gray-50">
-                            <td class="py-2 text-sm text-warm-gray-700">openai_embedding_model</td>
-                            <td class="py-2 text-sm">{{ config.embeddings.openai_embedding_model }}</td>
                         </tr>
                     </tbody>
                 </table>
