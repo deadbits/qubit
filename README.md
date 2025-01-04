@@ -24,7 +24,7 @@ No follower counts, no likes, no retweets — just thoughts and code in clean, m
 - Clean, distraction-free writing experience
 - Markdown editor with live preview
 - Tag-based organization
-- Semantic search with pgvector
+- Full text search
 - Modern, minimal frontend
 
 ## 🚀 Quick Start
@@ -44,7 +44,6 @@ cd qubit
 # docker/.env
 DB_PASSWORD=your_secure_password_here
 AUTH_SECRET_KEY=your_secret_key_here
-OPENAI_API_KEY=your_openai_key_here
 ADMIN_USERNAME=admin
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=your_admin_password

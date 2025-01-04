@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: pgvector/pgvector:pg17
+    image: postgres:17-alpine
     env_file: docker/.env
     environment:
       POSTGRES_DB: qubit
@@ -47,7 +47,6 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/qubit
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
       AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
       REDIS_URL: redis://redis:6379/0
       ADMIN_USERNAME: ${ADMIN_USERNAME}

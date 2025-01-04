@@ -32,7 +32,6 @@ class PostEntry(PostBase):
     content_html: str
     author_id: int
     published_at: Optional[datetime] = None
-    content_embedding: Optional[List[float]] = None
     created_at: datetime
     updated_at: datetime
     tags: List[str] = []

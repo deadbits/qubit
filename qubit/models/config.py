@@ -15,13 +15,6 @@ class DatabaseConfig(BaseModel):
     password: Optional[str] = None
 
 
-class EmbeddingsConfig(BaseModel):
-    """Embeddings configuration."""
-
-    openai_api_key: Optional[str] = None
-    openai_embedding_model: str = "text-embedding-3-large"
-
-
 class AuthorConfig(BaseModel):
     """Author configuration."""
 
@@ -46,10 +39,8 @@ class Config(BaseSettings):
     database: DatabaseConfig
     author: AuthorConfig
     auth: AuthConfig
-    embeddings: EmbeddingsConfig
 
     auth_secret_key: str = Field(default=..., env="AUTH_SECRET_KEY")
-    openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     db_password: str = Field(default=..., env="DB_PASSWORD")
 
     admin_username: str = Field(default=..., env="ADMIN_USERNAME")
@@ -66,6 +57,4 @@ class Config(BaseSettings):
         """Post initialization hook to set environment values."""
         super().model_post_init(*args, **kwargs)
         self.auth.secret_key = self.auth_secret_key
-        if self.openai_api_key:
-            self.embeddings.openai_api_key = self.openai_api_key
         self.database.password = self.db_password

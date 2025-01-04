@@ -2,9 +2,7 @@
 
 from typing import List, Annotated
 from uuid import UUID
-import json
 from fastapi import APIRouter, Depends, Request, Query, Path, Body
-from fastapi.responses import JSONResponse
 from starlette import status
 
 from qubit.services.post import PostService

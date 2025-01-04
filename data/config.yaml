@@ -8,9 +8,6 @@ auth:
   algorithm: "HS256"
   access_token_expire_minutes: 90
 
-embeddings:
-  openai_embedding_model: "text-embedding-3-large"
-
 author:
   name: Adam Swanda
   short_name: adam

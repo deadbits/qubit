@@ -7,7 +7,6 @@ from datetime import datetime
 from loguru import logger
 
 from qubit.models.post import PostCreate, PostEntry
-from qubit.services.embeddings import OpenAIClient
 from qubit.core.cache import cache_result, RedisCache
 from qubit.database import Database
 
@@ -20,7 +19,6 @@ class PostsDB(Database):
     def __init__(self, config):
         """Initialize database configuration."""
         super().__init__(config)
-        self.embeddings = OpenAIClient(config)
 
     @cache_result(ttl=300)  # Cache for 5 minutes
     async def get_post_by_slug(self, slug: str) -> Optional[PostEntry]:
@@ -30,7 +28,7 @@ class PostsDB(Database):
                 row = await conn.fetchrow(
                     """
                     SELECT p.id, p.title, p.content, p.content_html, p.slug,
-                           p.published, p.published_at, p.author_id, p.content_embedding,
+                           p.published, p.published_at, p.author_id,
                            p.created_at, p.updated_at,
                            array_agg(t.name) as tags
                     FROM posts p
@@ -52,7 +50,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=row["tags"] if row["tags"][0] is not None else [],
@@ -70,7 +67,7 @@ class PostsDB(Database):
                 row = await conn.fetchrow(
                     """
                     SELECT p.id, p.title, p.content, p.content_html, p.slug,
-                           p.published, p.published_at, p.author_id, p.content_embedding,
+                           p.published, p.published_at, p.author_id,
                            p.created_at, p.updated_at,
                            array_agg(t.name) as tags
                     FROM posts p
@@ -92,7 +89,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=row["tags"] if row["tags"][0] is not None else [],
@@ -117,7 +113,7 @@ class PostsDB(Database):
             try:
                 query = """
                     SELECT p.id, p.title, p.content, p.content_html, p.slug,
-                           p.published, p.published_at, p.author_id, p.content_embedding,
+                           p.published, p.published_at, p.author_id,
                            p.created_at, p.updated_at,
                            array_agg(t.name) as tags
                     FROM posts p
@@ -132,23 +128,14 @@ class PostsDB(Database):
                     query += f" AND p.author_id = ${len(params) + 1}"
                     params.append(author_id)
                 if search_query:
-                    embedding = self.embeddings.generate_embeddings([search_query])[0]
-                    query += f" AND p.content_embedding <=> ${len(params) + 1} < 0.5"  # Similarity threshold
-                    params.append(embedding)
+                    query += f" AND to_tsvector('english', p.title || ' ' || p.content) @@ plainto_tsquery('english', ${len(params) + 1})"
+                    params.append(search_query)
 
                 query += " GROUP BY p.id"
-                if search_query:
-                    query += (
-                        " ORDER BY p.content_embedding <=> $"
-                        + str(len(params))
-                        + " ASC"
-                    )
-                else:
-                    query += " ORDER BY p.created_at DESC"
-
-                query += " LIMIT $" + str(len(params) + 1)
+                query += " ORDER BY p.created_at DESC"
+                query += f" LIMIT ${len(params) + 1}"
                 params.append(limit)
-                query += " OFFSET $" + str(len(params) + 1)
+                query += f" OFFSET ${len(params) + 1}"
                 params.append(offset)
 
                 rows = await conn.fetch(query, *params)
@@ -162,7 +149,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=row["tags"] if row["tags"][0] is not None else [],
@@ -177,35 +163,38 @@ class PostsDB(Database):
     async def search_posts(
         self, query: str, limit: int = 10, offset: int = 0
     ) -> tuple[List[PostEntry], int]:
-        """Search posts using vector similarity and return total count."""
+        """Search posts using PostgreSQL full-text search and return total count."""
         async with self._pool.acquire() as conn:
             try:
-                embedding = self.embeddings.generate_embeddings([query])[0]
-
                 total = await conn.fetchval(
                     """
                     SELECT COUNT(*)
                     FROM posts p
                     WHERE p.published = true
-                    """
+                    AND to_tsvector('english', p.title || ' ' || p.content) @@ plainto_tsquery('english', $1)
+                    """,
+                    query
                 )
 
                 rows = await conn.fetch(
                     """
                     SELECT p.id, p.title, p.content, p.content_html, p.slug,
-                           p.published, p.published_at, p.author_id, p.content_embedding,
+                           p.published, p.published_at, p.author_id,
                            p.created_at, p.updated_at,
-                           array_agg(t.name) as tags
+                           array_agg(t.name) as tags,
+                           ts_rank(to_tsvector('english', p.title || ' ' || p.content), 
+                                 plainto_tsquery('english', $1)) as rank
                     FROM posts p
                     LEFT JOIN post_tags pt ON p.id = pt.post_id
                     LEFT JOIN tags t ON pt.tag_id = t.id
                     WHERE p.published = true
+                    AND to_tsvector('english', p.title || ' ' || p.content) @@ plainto_tsquery('english', $1)
                     GROUP BY p.id
-                    ORDER BY p.content_embedding <=> $1
+                    ORDER BY rank DESC
                     LIMIT $2
                     OFFSET $3
                 """,
-                    embedding,
+                    query,
                     limit,
                     offset,
                 )
@@ -220,7 +209,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=row["tags"] if row["tags"][0] is not None else [],
@@ -240,28 +228,19 @@ class PostsDB(Database):
         """Create a new post and invalidate relevant caches."""
         async with self._pool.acquire() as conn:
             try:
-                # Generate embeddings
-                embedding = self.embeddings.generate_embeddings(
-                    [f"{post.title}\n{post.content}"]
-                )[0]
-                
-                # Convert embedding to list if it's numpy array
-                if hasattr(embedding, 'tolist'):
-                    embedding = embedding.tolist()
-
                 async with conn.transaction():
                     now = datetime.utcnow()
                     row = await conn.fetchrow(
                         """
                         INSERT INTO posts (
                             title, content, content_html, slug, published,
-                            published_at, author_id, content_embedding,
+                            published_at, author_id,
                             created_at, updated_at
                         )
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                         RETURNING id, title, content, content_html, slug,
                                  published, published_at, author_id,
-                                 content_embedding, created_at, updated_at
+                                 created_at, updated_at
                         """,
                         post.title,
                         post.content,
@@ -270,7 +249,6 @@ class PostsDB(Database):
                         post.published,
                         datetime.utcnow() if post.published else None,
                         author_id,
-                        embedding,
                         now,
                         now,
                     )
@@ -285,7 +263,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=post.tags,
@@ -357,7 +334,7 @@ class PostsDB(Database):
                         WHERE id = $7
                         RETURNING id, title, content, content_html, slug,
                                   published, published_at, author_id,
-                                  content_embedding, created_at, updated_at
+                                  created_at, updated_at
                     """,
                         post.title,
                         post.content,
@@ -408,7 +385,6 @@ class PostsDB(Database):
                         published=row["published"],
                         published_at=row["published_at"],
                         author_id=row["author_id"],
-                        content_embedding=row["content_embedding"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
                         tags=post.tags,
